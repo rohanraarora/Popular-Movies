@@ -1,6 +1,13 @@
 <resources>
     <string name="app_name">Popular Movies</string>
     <string name="hello_world">Hello world!</string>
-    <string name="action_settings">Settings</string>
+    <string name="actionSort">Sort Movies</string>
     <string name="posterImageConDes">Poster Image</string>
+    <string name="title_activity_detail">Movie Details</string>
+    <string name="title">Title</string>
+    <string name="releaseDate">Release Date</string>
+    <string name="ratings">Ratings</string>
+    <string name="overview">Overview</string>
+    <string name="actionSortPopularity">Sort By Popularity</string>
+    <string name="sortByRatings">Sort By Ratings</string>
 </resources>
