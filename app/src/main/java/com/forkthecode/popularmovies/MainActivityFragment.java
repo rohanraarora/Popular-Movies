@@ -1,7 +1,10 @@
 package com.forkthecode.popularmovies;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -14,15 +17,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-
+import android.widget.Toast;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,7 +70,7 @@ public class MainActivityFragment extends Fragment {
         movies = new ArrayList<>();
         progressDialog = new ProgressDialog(getActivity());
         progressDialog.setMessage("Loading...");
-        FetchMoviesTask moviesTask = new FetchMoviesTask();
+        FetchMoviesTask moviesTask = new FetchMoviesTask(getActivity());
         moviesTask.execute();
         gridView = (GridView)output.findViewById(R.id.gridView);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -91,49 +91,70 @@ public class MainActivityFragment extends Fragment {
 
     class FetchMoviesTask extends AsyncTask<String, Void, ArrayList<Movie>> {
 
+        Context context;
+
+        public FetchMoviesTask(Context context){
+            this.context = context;
+        }
+
+
+        public boolean isOnline(Context context) {
+            ConnectivityManager cm =
+                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+
+            return activeNetwork != null &&
+                    activeNetwork.isConnectedOrConnecting();
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progressDialog.show();
+            if(!isOnline(context)){
+                cancel(true);
+                Toast.makeText(context,"No Internet Connection.",Toast.LENGTH_LONG).show();
+            }
+            else{
+                progressDialog.show();
+            }
         }
 
         @Override
         protected ArrayList<Movie> doInBackground(String... params) {
             try {
                 URL url = new URL(Constant.POPULAR_MOVIES_LIST_BASE_URL + Constant.API_KEY);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                if(connection.getResponseCode() == 200) {
-                    ArrayList<Movie> list = new ArrayList<>();
-                    InputStream inputStream = new BufferedInputStream(connection.getInputStream());
-                    BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
-                    StringBuilder responseBuilder = new StringBuilder();
-                    String line;
-                    while ((line = r.readLine()) != null) {
-                        responseBuilder.append(line);
+                OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder()
+                            .url(url)
+                            .build();
+                    Response response = client.newCall(request).execute();
+                    String responseJSONString =  response.body().string();
+                    if(response.isSuccessful()) {
+                        ArrayList<Movie> list = new ArrayList<>();
+                        JSONObject responseJSON = new JSONObject(responseJSONString);
+                        JSONArray resultJSONArray = responseJSON.getJSONArray("results");
+                        for(int i = 0;i<resultJSONArray.length();i++){
+                            JSONObject movieJSON = resultJSONArray.getJSONObject(i);
+                            long id = movieJSON.getLong("id");
+                            String title = movieJSON.getString("title");
+                            String plot = movieJSON.getString("overview");
+                            String releaseDate = movieJSON.getString("release_date");
+                            String posterPath = movieJSON.getString("poster_path");
+                            Double userRatings = movieJSON.getDouble("vote_average");
+                            Double popularity = movieJSON.getDouble("popularity");
+                            Movie movie = new Movie(id,title,plot,releaseDate,posterPath,userRatings,popularity);
+                            list.add(movie);
+                        }
+                        return list;
                     }
-                    String response = responseBuilder.toString();
-                    Log.v("json", response);
-                    JSONObject responseJSON = new JSONObject(response);
-                    JSONArray resultJSONArray = responseJSON.getJSONArray("results");
-                    for(int i = 0;i<resultJSONArray.length();i++){
-                        JSONObject movieJSON = resultJSONArray.getJSONObject(i);
-                        long id = movieJSON.getLong("id");
-                        String title = movieJSON.getString("title");
-                        String plot = movieJSON.getString("overview");
-                        String releaseDate = movieJSON.getString("release_date");
-                        String posterPath = movieJSON.getString("poster_path");
-                        Double userRatings = movieJSON.getDouble("vote_average");
-                        Double popularity = movieJSON.getDouble("popularity");
-                        Movie movie = new Movie(id,title,plot,releaseDate,posterPath,userRatings,popularity);
-                        list.add(movie);
+                    else{
+                        Log.v("response","code not 200");
+                        return null;
                     }
-                    return list;
-                }
-                else{
-                    Log.v("response","code not 200");
-                    return null;
-                }
+
+
+
             }
             catch (Exception e){
                 Log.v("response",e.toString());

@@ -6,19 +6,24 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import extras.Constant;
+import model.Movie;
+
 public class DetailActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
         Intent intent = getIntent();
         DetailActivityFragment fragment = new DetailActivityFragment();
         Bundle bundle = intent.getExtras();
+        Movie movie = (Movie)bundle.getSerializable(Constant.MOVIE_INTENT_KEY);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle(movie != null ? movie.getTitle() : "Movie Details");
+        }
         fragment.setArguments(bundle);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()

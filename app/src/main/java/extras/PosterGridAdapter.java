@@ -23,7 +23,10 @@ public class PosterGridAdapter extends BaseAdapter {
     ArrayList<Movie> movies;
     Context context;
     public PosterGridAdapter(Context context,ArrayList<Movie> movieList){
-        movies = movieList;
+        movies = new ArrayList<>();
+        if(movieList!=null) {
+            movies = movieList;
+        }
         this.context = context;
     }
 
