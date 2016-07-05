@@ -18,14 +18,16 @@ import java.util.ArrayList;
 
 import extras.Constant;
 import model.Movie;
+import model.Trailer;
 
 /**
  * Created by Rohan on 2/2/2016.
+ *
  */
-public class FetchTrailers extends AsyncTask<String,Void,ArrayList<String>> {
+public class FetchTrailers extends AsyncTask<String,Void,ArrayList<Trailer>> {
 
     public interface TrailersFetched{
-        void onTrailersFetched(ArrayList<String> keys);
+        void onTrailersFetched(ArrayList<Trailer> trailers);
     }
 
     Context context;
@@ -56,9 +58,8 @@ public class FetchTrailers extends AsyncTask<String,Void,ArrayList<String>> {
         }
     }
 
-    @Override
-    protected ArrayList<String> doInBackground(String... params) {
-        ArrayList<String> keys = new ArrayList<>();
+    protected ArrayList<Trailer> doInBackground(String... params) {
+        ArrayList<Trailer> trailers = new ArrayList<>();
         try {
             URL url = new URL(Constant.getTrailersUrl(movie.getId()));
             OkHttpClient client = new OkHttpClient();
@@ -73,9 +74,9 @@ public class FetchTrailers extends AsyncTask<String,Void,ArrayList<String>> {
                 for(int i = 0;i<resultJSONArray.length();i++){
                     JSONObject trailerJSON = resultJSONArray.getJSONObject(i);
                     String key = trailerJSON.getString("key");
-                    keys.add(key);
+                    trailers.add(new Trailer(movie.getId(),key));
                 }
-                return keys;
+                return trailers;
             }
             else{
                 Log.v("response", "code not 200");
@@ -93,10 +94,10 @@ public class FetchTrailers extends AsyncTask<String,Void,ArrayList<String>> {
     }
 
     @Override
-    protected void onPostExecute(ArrayList<String> strings) {
-        super.onPostExecute(strings);
+    protected void onPostExecute(ArrayList<Trailer> trailers) {
+        super.onPostExecute(trailers);
         if(trailersFetched!=null){
-            trailersFetched.onTrailersFetched(strings);
+            trailersFetched.onTrailersFetched(trailers);
         }
     }
 }

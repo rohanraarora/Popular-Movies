@@ -6,6 +6,7 @@
         <menu>
             <item android:id="@+id/action_sort_popularity" android:title="@string/actionSortPopularity"/>
             <item android:id="@+id/action_sort_ratings" android:title="@string/sortByRatings"/>
+            <item android:id="@+id/action_show_favorites" android:title="@string/show_favorites"/>
         </menu>
     </item>
 </menu>

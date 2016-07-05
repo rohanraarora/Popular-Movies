@@ -54,6 +54,12 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="@string/ratings"
                     android:id="@+id/ratingTextView" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@android:drawable/btn_star_big_off"
+                    android:id="@+id/favoriteImageView"/>
             </LinearLayout>
         </LinearLayout>
 

@@ -12,4 +12,5 @@
     <string name="sortByRatings">Sort By Ratings</string>
     <string name="trailersText">Trailers</string>
     <string name="reviewsText">Reviews</string>
+    <string name="show_favorites">Show Favorites</string>
 </resources>

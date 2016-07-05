@@ -22,6 +22,7 @@ import model.Review;
 
 /**
  * Created by Rohan on 2/2/2016.
+ *
  */
 public class FetchReviews extends AsyncTask<String,Void,ArrayList<Review>> {
     public interface ReviewsFetched{
@@ -74,7 +75,7 @@ public class FetchReviews extends AsyncTask<String,Void,ArrayList<Review>> {
                     JSONObject reviewJSON = resultJSONArray.getJSONObject(i);
                     String author = reviewJSON.getString("author");
                     String content = reviewJSON.getString("content");
-                    Review review = new Review(author,content);
+                    Review review = new Review(movie.getId(),author,content);
                     reviews.add(review);
                 }
                 return reviews;

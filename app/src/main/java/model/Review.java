@@ -6,8 +6,9 @@ package model;
 public class Review {
     private String author;
     private String content;
+    private  long movieId;
 
-    public Review(String author,String content){
+    public Review(long movieId,String author,String content){
         this.author = author;
         this.content = content;
     }
@@ -18,6 +19,14 @@ public class Review {
 
     public String getContent() {
         return content;
+    }
+
+    public long getMovieId() {
+        return movieId;
+    }
+
+    public void setMovieId(long movieId) {
+        this.movieId = movieId;
     }
 
     public void setAuthor(String author) {

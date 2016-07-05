@@ -36,7 +36,6 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
 
                 getSupportFragmentManager().beginTransaction()
                         .add(R.id.container, detailActivityFragment).commit();
-                return;
             }
 
             // Create a new Fragment to be placed in the activity layout
@@ -69,4 +68,16 @@ public class MainActivity extends AppCompatActivity implements MainActivityFragm
             startActivity(detailActivityIntent);
         }
     }
+
+    @Override
+    public void onMoviesListChanged() {
+        if(mTwoPane){
+            DetailActivityFragment newFragment = new DetailActivityFragment();
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.container, newFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        }
+    }
+
 }
