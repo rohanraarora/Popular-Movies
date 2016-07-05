@@ -2,12 +2,12 @@ package com.forkthecode.popularmovies;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v7.app.ActionBar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
+import com.forkthecode.popularmovies.data.MovieOpenHelper;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
@@ -25,9 +26,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import extras.Constant;
 import extras.PosterGridAdapter;
 import model.Movie;
@@ -39,12 +41,42 @@ public class MainActivityFragment extends Fragment {
 
     ArrayList<Movie> movies;
     PosterGridAdapter adapter;
-    GridView gridView;
+    @Bind(R.id.gridView) GridView gridView;
     ProgressDialog progressDialog;
     Comparator<Movie> popularityComparator;
     Comparator<Movie> ratingsComparator;
+    Callback callback;
 
     public MainActivityFragment() {
+    }
+
+    public void reloadFavoriteMovies() {
+        MovieOpenHelper openHelper = MovieOpenHelper.getInstance(getActivity());
+        movies.clear();
+        movies.addAll(openHelper.getAllMovies());
+        adapter.notifyDataSetChanged();
+        if(callback!=null){
+            callback.onMoviesListChanged();
+        }
+    }
+
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        void onItemSelected(Movie movie);
+        void onMoviesListChanged();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            callback = (MainActivity) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement Callback");
+        }
     }
 
     @Override
@@ -52,7 +84,7 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View output = inflater.inflate(R.layout.fragment_main, container, false);
         setHasOptionsMenu(true);
-
+        ButterKnife.bind(this,output);
         popularityComparator = new Comparator<Movie>() {
             @Override
             public int compare(Movie lhs, Movie rhs) {
@@ -70,23 +102,27 @@ public class MainActivityFragment extends Fragment {
         movies = new ArrayList<>();
         progressDialog = new ProgressDialog(getActivity());
         progressDialog.setMessage("Loading...");
+        progressDialog.setCancelable(false);
         FetchMoviesTask moviesTask = new FetchMoviesTask(getActivity());
-        moviesTask.execute();
-        gridView = (GridView)output.findViewById(R.id.gridView);
+        moviesTask.execute(Constant.POPULAR_MOVIES_LIST_BASE_URL);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent detailActivityIntent = new Intent(getActivity(),DetailActivity.class);
                 Movie item = movies.get(position);
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(Constant.MOVIE_INTENT_KEY,item);
-                detailActivityIntent.putExtras(bundle);
-                startActivity(detailActivityIntent);
+                if(callback!=null){
+                    callback.onItemSelected(item);
+                }
             }
         });
-
+        adapter = new PosterGridAdapter(getActivity(),movies);
+        gridView.setAdapter(adapter);
         return output;
+    }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
     }
 
     class FetchMoviesTask extends AsyncTask<String, Void, ArrayList<Movie>> {
@@ -123,7 +159,7 @@ public class MainActivityFragment extends Fragment {
         @Override
         protected ArrayList<Movie> doInBackground(String... params) {
             try {
-                URL url = new URL(Constant.POPULAR_MOVIES_LIST_BASE_URL + Constant.API_KEY);
+                URL url = new URL(params[0]);
                 OkHttpClient client = new OkHttpClient();
                     Request request = new Request.Builder()
                             .url(url)
@@ -143,7 +179,8 @@ public class MainActivityFragment extends Fragment {
                             String posterPath = movieJSON.getString("poster_path");
                             Double userRatings = movieJSON.getDouble("vote_average");
                             Double popularity = movieJSON.getDouble("popularity");
-                            Movie movie = new Movie(id,title,plot,releaseDate,posterPath,userRatings,popularity);
+                            String coverImagePath = movieJSON.getString("backdrop_path");
+                            Movie movie = new Movie(id,title,plot,releaseDate,posterPath,userRatings,popularity,coverImagePath);
                             list.add(movie);
                         }
                         return list;
@@ -164,10 +201,15 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         protected void onPostExecute(ArrayList<Movie> movieList) {
-            movies = movieList;
-            adapter = new PosterGridAdapter(getActivity(),movies);
-            gridView.setAdapter(adapter);
-            progressDialog.dismiss();
+            if(movieList!=null) {
+                movies.clear();
+                movies.addAll(movieList);
+                adapter.notifyDataSetChanged();
+                progressDialog.dismiss();
+                if (callback != null) {
+                    callback.onMoviesListChanged();
+                }
+            }
         }
     }
 
@@ -188,13 +230,38 @@ public class MainActivityFragment extends Fragment {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_sort_ratings) {
-            Collections.sort(movies,ratingsComparator);
-            adapter.notifyDataSetChanged();
+            if(getActivity()!=null){
+                ActionBar actionBar = ((MainActivity)getActivity()).getSupportActionBar();
+                if(actionBar!=null){
+                    actionBar.setTitle("Top Rated Movies");
+                }
+
+            }
+            FetchMoviesTask moviesTask = new FetchMoviesTask(getActivity());
+            moviesTask.execute(Constant.MOST_RATED_MOVIES_LIST_BASE_URL);
             return true;
         }
         else if (id == R.id.action_sort_popularity){
-            Collections.sort(movies,popularityComparator);
-            adapter.notifyDataSetChanged();
+            if(getActivity()!=null){
+                ActionBar actionBar = ((MainActivity)getActivity()).getSupportActionBar();
+                if(actionBar!=null){
+                    actionBar.setTitle("Popular Movies");
+                }
+
+            }
+            FetchMoviesTask moviesTask = new FetchMoviesTask(getActivity());
+            moviesTask.execute(Constant.POPULAR_MOVIES_LIST_BASE_URL);
+            return true;
+        }
+        else if(id == R.id.action_show_favorites){
+            if(getActivity()!=null){
+                ActionBar actionBar = ((MainActivity)getActivity()).getSupportActionBar();
+                if(actionBar!=null){
+                    actionBar.setTitle("Favorite Movies");
+                }
+
+            }
+            reloadFavoriteMovies();
             return true;
         }
 

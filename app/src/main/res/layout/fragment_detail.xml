@@ -7,18 +7,15 @@
         android:orientation="vertical">
 
 
-        <TextView
+        <ImageView
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:text="@string/title"
-            android:gravity="center_vertical"
-            android:padding="16dp"
-            android:background="#3F51B5"
-            android:id="@+id/titleTextView"
-            android:layout_gravity="center_horizontal" />
+            android:layout_height="wrap_content"
+            android:id="@+id/coverImageView"
+            android:adjustViewBounds="true"
+            android:maxHeight="300dp"
+            android:src="@drawable/placeholder"
+            android:cropToPadding="false"
+            android:scaleType="centerCrop" />
 
         <LinearLayout
             android:orientation="horizontal"
@@ -57,6 +54,12 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:text="@string/ratings"
                     android:id="@+id/ratingTextView" />
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@android:drawable/btn_star_big_off"
+                    android:id="@+id/favoriteImageView"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -67,6 +70,47 @@
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:text="@string/overview"
             android:id="@+id/overviewTextView" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#000000"
+            android:text="@string/trailersText"/>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:padding="16dp"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/trailerLinearLayout"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/activity_vertical_margin">
+
+
+            </LinearLayout>
+
+        </HorizontalScrollView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="#000000"
+            android:text="@string/reviewsText"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/reviewsLinearLayout"></LinearLayout>
+
+
     </LinearLayout>
+
 
 </ScrollView>

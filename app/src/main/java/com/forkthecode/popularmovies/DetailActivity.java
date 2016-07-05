@@ -1,15 +1,18 @@
 package com.forkthecode.popularmovies;
 
 import android.content.Intent;
+import android.support.annotation.BinderThread;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import butterknife.Bind;
 import extras.Constant;
 import model.Movie;
 
 public class DetailActivity extends AppCompatActivity {
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,4 +54,5 @@ public class DetailActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
 }
