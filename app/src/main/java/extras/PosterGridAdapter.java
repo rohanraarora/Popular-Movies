@@ -55,7 +55,8 @@ public class PosterGridAdapter extends BaseAdapter {
         ImageView imageView = (ImageView)output.findViewById(R.id.cellLayoutImageView);
         Movie movie = getItem(position);
         String url = Constant.MOVIE_POSTER_BASE_URL + Constant.POSTER_SIZE_W185 + movie.getPosterPath();
-        Picasso.with(context).load(url).into(imageView);
+        Picasso.with(context).load(url).placeholder(R.drawable.placeholder)
+                .error(R.drawable.placeholder).into(imageView);
         return output;
     }
 }

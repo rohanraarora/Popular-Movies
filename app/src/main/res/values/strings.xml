@@ -10,4 +10,6 @@
     <string name="overview">Overview</string>
     <string name="actionSortPopularity">Sort By Popularity</string>
     <string name="sortByRatings">Sort By Ratings</string>
+    <string name="trailersText">Trailers</string>
+    <string name="reviewsText">Reviews</string>
 </resources>

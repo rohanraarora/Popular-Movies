@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import extras.Constant;
 import extras.PosterGridAdapter;
 import model.Movie;
@@ -39,12 +41,31 @@ public class MainActivityFragment extends Fragment {
 
     ArrayList<Movie> movies;
     PosterGridAdapter adapter;
-    GridView gridView;
+    @Bind(R.id.gridView) GridView gridView;
     ProgressDialog progressDialog;
     Comparator<Movie> popularityComparator;
     Comparator<Movie> ratingsComparator;
+    Callback callback;
 
     public MainActivityFragment() {
+    }
+
+    public interface Callback {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        void onItemSelected(Movie movie);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            callback = (MainActivity) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement Callback");
+        }
     }
 
     @Override
@@ -52,7 +73,7 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View output = inflater.inflate(R.layout.fragment_main, container, false);
         setHasOptionsMenu(true);
-
+        ButterKnife.bind(this,output);
         popularityComparator = new Comparator<Movie>() {
             @Override
             public int compare(Movie lhs, Movie rhs) {
@@ -72,21 +93,22 @@ public class MainActivityFragment extends Fragment {
         progressDialog.setMessage("Loading...");
         FetchMoviesTask moviesTask = new FetchMoviesTask(getActivity());
         moviesTask.execute();
-        gridView = (GridView)output.findViewById(R.id.gridView);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent detailActivityIntent = new Intent(getActivity(),DetailActivity.class);
                 Movie item = movies.get(position);
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(Constant.MOVIE_INTENT_KEY,item);
-                detailActivityIntent.putExtras(bundle);
-                startActivity(detailActivityIntent);
+                if(callback!=null){
+                    callback.onItemSelected(item);
+                }
             }
         });
-
         return output;
+    }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
     }
 
     class FetchMoviesTask extends AsyncTask<String, Void, ArrayList<Movie>> {
@@ -143,7 +165,8 @@ public class MainActivityFragment extends Fragment {
                             String posterPath = movieJSON.getString("poster_path");
                             Double userRatings = movieJSON.getDouble("vote_average");
                             Double popularity = movieJSON.getDouble("popularity");
-                            Movie movie = new Movie(id,title,plot,releaseDate,posterPath,userRatings,popularity);
+                            String coverImagePath = movieJSON.getString("backdrop_path");
+                            Movie movie = new Movie(id,title,plot,releaseDate,posterPath,userRatings,popularity,coverImagePath);
                             list.add(movie);
                         }
                         return list;
